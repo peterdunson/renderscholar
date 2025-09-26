@@ -9,7 +9,8 @@ class Paper(BaseModel):
     pdf_link: Optional[str]
     snippet: Optional[str]
     authors_year: Optional[str]
-    citations: Optional[int] 
+    citations: Optional[int]
+    year: Optional[int]
 
 def clean_text(text: str) -> str:
     """Remove non-ASCII characters and tidy up spaces."""
@@ -27,13 +28,17 @@ def format_results_for_llm(results: List[dict]) -> str:
         authors_year = clean_text(r.get("authors_year", ""))
         snippet = clean_text(r.get("snippet", ""))
         link = r.get("pdf_link") or r.get("scholar_link") or r.get("link") or "No link"
+        citations = r.get("citations", 0)
+        year = r.get("year", "?")
 
         formatted = (
             f"📄 {title}\n"
-            f"👥 {authors_year}\n"
+            f"👥 {authors_year} ({year})\n"
             f"🔗 {link}\n"
+            f"📑 Citations: {citations}\n"
             f"✏️ {snippet}"
         )
         output.append(formatted)
 
     return "\n\n".join(output)
+

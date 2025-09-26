@@ -1,6 +1,7 @@
 README.md
 pyproject.toml
 renderscholar/__init__.py
+renderscholar/cli.py
 renderscholar/models.py
 renderscholar/scholar.py
 renderscholar.egg-info/PKG-INFO

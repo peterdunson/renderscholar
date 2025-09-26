@@ -1,0 +1,19 @@
+# Core scraping
+playwright>=1.55.0
+beautifulsoup4>=4.12.3
+html5lib>=1.1
+lxml>=5.2.2
+
+# Data / math
+numpy>=1.26.0
+
+# OpenAI client
+python-dotenv>=1.0.1
+
+# Bayesian models (if you want to keep pymc ranking)
+pymc>=5.16.1
+
+# Formatting utilities
+pydantic>=2.9.2
+pygments>=2.19.0
+markdown>=3.8.2

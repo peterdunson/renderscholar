@@ -24,13 +24,13 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
+
 dependencies = [
     "playwright>=1.55.0",
     "beautifulsoup4>=4.12.3",
     "html5lib>=1.1",
     "lxml>=5.2.2",
     "numpy>=1.26.0",
-    "openai>=1.40.0",
     "python-dotenv>=1.0.1",
     "pymc>=5.16.1",
     "pydantic>=2.9.2",
@@ -42,8 +42,8 @@ dependencies = [
 renderscholar = "renderscholar.cli:main"
 
 [tool.setuptools]
-# Explicitly list the Python files you ship
-py-modules = ["renderscholar", "scholar", "models"]
+# Package discovery (since you have a renderscholar/ dir with cli.py, scholar.py, models.py)
+packages = ["renderscholar"]
 
 [project.urls]
 Homepage = "https://github.com/peterdunson/renderscholar"

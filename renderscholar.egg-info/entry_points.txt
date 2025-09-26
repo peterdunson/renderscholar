@@ -1,0 +1,2 @@
+[console_scripts]
+renderscholar = renderscholar:main

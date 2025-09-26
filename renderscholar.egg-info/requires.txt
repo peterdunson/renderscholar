@@ -1,0 +1,9 @@
+playwright
+beautifulsoup4
+numpy
+openai
+python-dotenv
+pymc
+pydantic
+pygments
+markdown

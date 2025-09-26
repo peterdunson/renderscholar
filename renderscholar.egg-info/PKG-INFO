@@ -1,0 +1,17 @@
+Metadata-Version: 2.4
+Name: renderscholar
+Version: 0.1.0
+Summary: Search Google Scholar and render results into a single static HTML page
+Author: Your Name
+License-Expression: 0BSD
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: playwright
+Requires-Dist: beautifulsoup4
+Requires-Dist: numpy
+Requires-Dist: openai
+Requires-Dist: python-dotenv
+Requires-Dist: pymc
+Requires-Dist: pydantic
+Requires-Dist: pygments
+Requires-Dist: markdown

@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "renderscholar"
+version = "0.1.0"
+description = "Search Google Scholar and render results into a static HTML page"
+readme = "README.md"
+license = "0BSD"
+authors = [
+    {name = "Your Name"},
+]
+requires-python = ">=3.10"
+dependencies = [
+    "playwright",
+    "beautifulsoup4",
+    "numpy",
+    "openai",
+    "python-dotenv",
+    "pymc",
+    "pydantic",
+    "pygments",
+    "markdown"
+]
+
+[project.scripts]
+renderscholar = "renderscholar:main"

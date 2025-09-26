@@ -5,24 +5,46 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "renderscholar"
 version = "0.1.0"
-description = "Search Google Scholar and render results into a static HTML page"
+description = "Scrape Google Scholar and render results into human + LLM-friendly formats"
 readme = "README.md"
-license = "0BSD"
+license = {text = "MIT"}
 authors = [
-    {name = "Your Name"},
+    {name = "Peter Dunson"},
 ]
 requires-python = ">=3.10"
+keywords = ["google scholar", "scraper", "papers", "research", "LLM"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
 dependencies = [
-    "playwright",
-    "beautifulsoup4",
-    "numpy",
-    "openai",
-    "python-dotenv",
-    "pymc",
-    "pydantic",
-    "pygments",
-    "markdown"
+    "playwright>=1.55.0",
+    "beautifulsoup4>=4.12.3",
+    "html5lib>=1.1",
+    "lxml>=5.2.2",
+    "numpy>=1.26.0",
+    "openai>=1.40.0",
+    "python-dotenv>=1.0.1",
+    "pymc>=5.16.1",
+    "pydantic>=2.9.2",
+    "pygments>=2.19.0",
+    "markdown>=3.8.2",
 ]
 
 [project.scripts]
-renderscholar = "renderscholar:main"
+renderscholar = "renderscholar.cli:main"
+
+[tool.setuptools]
+# Explicitly list the Python files you ship
+py-modules = ["renderscholar", "scholar", "models"]
+
+[project.urls]
+Homepage = "https://github.com/peterdunson/renderscholar"
+Repository = "https://github.com/peterdunson/renderscholar"

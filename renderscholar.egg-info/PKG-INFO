@@ -1,17 +1,31 @@
 Metadata-Version: 2.4
 Name: renderscholar
 Version: 0.1.0
-Summary: Search Google Scholar and render results into a single static HTML page
-Author: Your Name
-License-Expression: 0BSD
+Summary: Scrape Google Scholar and render results into human + LLM-friendly formats
+Author: Peter Dunson
+License: MIT
+Project-URL: Homepage, https://github.com/peterdunson/renderscholar
+Project-URL: Repository, https://github.com/peterdunson/renderscholar
+Keywords: google scholar,scraper,papers,research,LLM
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Science/Research
+Classifier: Topic :: Scientific/Engineering :: Information Analysis
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Programming Language :: Python :: 3.13
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
 Requires-Python: >=3.10
 Description-Content-Type: text/markdown
-Requires-Dist: playwright
-Requires-Dist: beautifulsoup4
-Requires-Dist: numpy
-Requires-Dist: openai
-Requires-Dist: python-dotenv
-Requires-Dist: pymc
-Requires-Dist: pydantic
-Requires-Dist: pygments
-Requires-Dist: markdown
+Requires-Dist: playwright>=1.55.0
+Requires-Dist: beautifulsoup4>=4.12.3
+Requires-Dist: html5lib>=1.1
+Requires-Dist: lxml>=5.2.2
+Requires-Dist: numpy>=1.26.0
+Requires-Dist: openai>=1.40.0
+Requires-Dist: python-dotenv>=1.0.1
+Requires-Dist: pymc>=5.16.1
+Requires-Dist: pydantic>=2.9.2
+Requires-Dist: pygments>=2.19.0
+Requires-Dist: markdown>=3.8.2

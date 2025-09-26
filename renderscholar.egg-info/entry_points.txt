@@ -1,2 +1,2 @@
 [console_scripts]
-renderscholar = renderscholar:main
+renderscholar = renderscholar.cli:main

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
-Search Google Scholar and render results into a static HTML page
-with Human and LLM views.
+renderscholar: Scrape Google Scholar and render results in Human + LLM views
 """
 
 import argparse
@@ -24,6 +23,7 @@ from renderscholar.models import format_results_for_llm
 
 
 def build_html(query: str, papers: List[dict]) -> str:
+    """Generate the HTML page with Human + LLM views."""
     formatter = HtmlFormatter(nowrap=False)
     pygments_css = formatter.get_style_defs('.highlight')
 
@@ -57,7 +57,7 @@ def build_html(query: str, papers: List[dict]) -> str:
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>Scholar results – {html.escape(query)}</title>
+<title>renderscholar – {html.escape(query)}</title>
 <style>
   body {{
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial;
@@ -165,7 +165,7 @@ function showLLMView() {{
 
 
 def derive_temp_output_path(query: str) -> pathlib.Path:
-    """Temporary output path derived from query."""
+    """Temporary output path derived from query string."""
     safe_query = "".join(c if c.isalnum() else "_" for c in query)
     filename = f"renderscholar_{safe_query[:30]}.html"
     return pathlib.Path(tempfile.gettempdir()) / filename
@@ -174,10 +174,10 @@ def derive_temp_output_path(query: str) -> pathlib.Path:
 def main() -> int:
     ap = argparse.ArgumentParser(description="Search Google Scholar and render results into HTML")
     ap.add_argument("query", help="Search query")
-    ap.add_argument("--pool-size", type=int, default=50, help="Number of papers to scrape from Scholar")
+    ap.add_argument("--pool-size", type=int, default=100, help="Number of papers to scrape")
     ap.add_argument("--filter-top-k", type=int, default=20, help="Number of top papers to keep after ranking")
     ap.add_argument("--algo", choices=["standard", "smart", "bayesian"], default="standard", help="Ranking algorithm")
-    ap.add_argument("-o", "--out", help="Output HTML file path (default: temp file)")
+    ap.add_argument("-o", "--out", help="Output HTML file path (default: derived from query)")
     ap.add_argument("--no-open", action="store_true", help="Don't open HTML in browser after generation")
     args = ap.parse_args()
 
@@ -197,16 +197,13 @@ def main() -> int:
 
     print(f"✓ Filtered down to {len(ranked)} papers", file=sys.stderr)
 
-    print("🔨 Generating HTML...", file=sys.stderr)
     html_out = build_html(args.query, ranked)
 
     out_path = pathlib.Path(args.out)
     out_path.write_text(html_out, encoding="utf-8")
-    file_size = out_path.stat().st_size
-    print(f"💾 Wrote {file_size/1024:.1f} KiB to {out_path}", file=sys.stderr)
+    print(f"💾 Wrote {out_path.stat().st_size/1024:.1f} KiB to {out_path}", file=sys.stderr)
 
     if not args.no_open:
-        print(f"🌐 Opening in browser...", file=sys.stderr)
         webbrowser.open(f"file://{out_path.resolve()}")
 
     return 0

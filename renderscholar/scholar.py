@@ -8,17 +8,8 @@ import re
 from difflib import SequenceMatcher
 import numpy as np
 from datetime import datetime
-from openai import OpenAI
-import os
-from dotenv import load_dotenv
-from openai import OpenAI
 import pymc as pm
-import numpy as np
-
-
-load_dotenv()
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
+import os
 
 
 def search_scholar(query: str, pool_size: int = 100, sort_by: str = "relevance", wait_for_user=False):
@@ -26,7 +17,7 @@ def search_scholar(query: str, pool_size: int = 100, sort_by: str = "relevance",
     Scrape Google Scholar for a pool of papers.
     If captcha appears, user solves it manually in the visible browser.
     When scraping completes, prints "DONE SCRAPING" and writes scrape_done.txt.
-    If wait_for_user=True, Streamlit will show a resume button after captcha.
+    If wait_for_user=True, pauses until user clears captcha.
     """
     results = []
     encoded_query = quote_plus(query)
@@ -63,15 +54,11 @@ def search_scholar(query: str, pool_size: int = 100, sort_by: str = "relevance",
                 print("⚠️ Captcha detected, please solve it in the browser.")
 
                 if wait_for_user:
-                    # signal to UI that we're waiting
                     with open("captcha_flag.txt", "w") as f:
                         f.write("waiting")
-
-                    # wait until UI removes this file
                     while os.path.exists("captcha_flag.txt"):
                         time.sleep(1)
 
-                # otherwise just block until solved
                 page.wait_for_selector(".gs_ri, .gs_r, .gs_or", timeout=0)
 
             # parse entries
@@ -134,7 +121,6 @@ def search_scholar(query: str, pool_size: int = 100, sort_by: str = "relevance",
     return results
 
 
-
 def rank_papers(
     query: str,
     papers: list,
@@ -145,8 +131,6 @@ def rank_papers(
 ):
     """
     Heuristic filtering stage: rank by similarity + citations + recency.
-    Weights can be customized (default: sim=0.5, cites=0.3, recency=0.2).
-    Returns top max_results to feed into the LLM.
     """
     scored = []
     for paper in papers:
@@ -169,84 +153,20 @@ def rank_papers(
         score = (w_sim * sim) + (w_cites * (cites / 10)) + (w_recency * recency)
         scored.append((score, paper))
 
-    # Sort by score (descending)
     scored.sort(key=lambda x: x[0], reverse=True)
     return [p for _, p in scored[:max_results]]
-
-def cosine_similarity(v1, v2):
-    return np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
-
-
-def smart_rank_papers(query: str, papers: list, max_results: int = 20, tau: float = 5.0):
-    """
-    Super Smart filtering stage:
-    - Semantic similarity (OpenAI embeddings)
-    - Citation impact normalized by paper age
-    - Recency via exponential decay
-    - PDF boost
-    Returns top max_results to feed into the LLM.
-    """
-    current_year = datetime.now().year
-
-    # Embed the query once
-    query_vec = client.embeddings.create(
-        model="text-embedding-3-small",
-        input=query
-    ).data[0].embedding
-
-    scored = []
-    for paper in papers:
-        # Title + snippet combined for embedding
-        text = (paper.get("title") or "") + " " + (paper.get("snippet") or "")
-        if not text.strip():
-            continue
-
-        # Embedding similarity
-        paper_vec = client.embeddings.create(
-            model="text-embedding-3-small",
-            input=text
-        ).data[0].embedding
-        semantic_sim = cosine_similarity(query_vec, paper_vec)
-
-        # Citation impact per year
-        citations = paper.get("citations") or 0
-        year = paper.get("year") or current_year
-        age = max(1, current_year - year + 1)
-        citation_score = citations / age  # favors influential + newer
-
-        # Recency with exponential decay
-        recency = np.exp(-(current_year - year) / tau) if paper.get("year") else 0.0
-
-        # PDF boost (slight bump if accessible)
-        pdf_boost = 0.1 if paper.get("pdf_link") else 0.0
-
-        # Weighted score
-        score = (0.4 * semantic_sim +
-                 0.25 * (citation_score / 100) +  # scaled down
-                 0.25 * recency +
-                 pdf_boost)
-
-        scored.append((score, paper))
-
-    # Sort by score
-    scored.sort(key=lambda x: x[0], reverse=True)
-    return [p for _, p in scored[:max_results]]
-
 
 
 def bayesian_rank_papers(query: str, papers: list, max_results: int = 20):
     """
     Bayesian linear model filter:
-    Uses semantic similarity, citation score (per year), and recency.
+    Uses similarity, citation score (per year), and recency.
     Returns top max_results papers by posterior predictive mean relevance.
     """
-
-    # Build feature matrix
     X, paper_list = [], []
     current_year = datetime.now().year
 
     for paper in papers:
-        # Features
         sim = 0.0
         if paper.get("title"):
             sim = SequenceMatcher(None, query.lower(), paper["title"].lower()).ratio()
@@ -265,38 +185,28 @@ def bayesian_rank_papers(query: str, papers: list, max_results: int = 20):
 
     X = np.array(X)
 
-    # Priors + Bayesian linear regression
     with pm.Model() as model:
-        # Priors on weights
         w = pm.Normal("w", mu=[0.8, 0.5, 0.5], sigma=[0.3, 0.3, 0.3], shape=3)
         sigma = pm.HalfNormal("sigma", sigma=1.0)
-
         mu = pm.math.dot(X, w)
-        relevance = pm.Normal("relevance", mu=mu, sigma=sigma, observed=np.ones(len(X)))  # fake obs to anchor
+        pm.Normal("relevance", mu=mu, sigma=sigma, observed=np.ones(len(X)))
+        trace = pm.sample(1000, tune=500, chains=2, cores=2, progressbar=True)
 
-        trace = pm.sample(2000, tune=500, chains=4, cores=4, progressbar=True)
-
-    # Posterior mean weights
     w_mean = trace.posterior["w"].mean(dim=["chain", "draw"]).values
-
-    # Score papers with posterior mean weights
     scores = X @ w_mean
     ranked = sorted(zip(scores, paper_list), key=lambda x: x[0], reverse=True)
 
     return [p for _, p in ranked[:max_results]]
 
 
-
-
 if __name__ == "__main__":
     print("🔎 Testing scholar scraper...\n")
-    pool = search_scholar("bayesian regression", pool_size=50, sort_by="relevance")
-    ranked = rank_papers("bayesian regression", pool, max_results=10)
+    pool = search_scholar("bayesian regression", pool_size=10, sort_by="relevance")
+    ranked = rank_papers("bayesian regression", pool, max_results=5)
 
     for idx, r in enumerate(ranked, 1):
         print(f"\n=== Ranked Result {idx} ===")
         for key, value in r.items():
             print(f"{key}: {value}")
-
 
 

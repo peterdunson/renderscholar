@@ -7,9 +7,8 @@ import math
 import re
 from difflib import SequenceMatcher
 import numpy as np
-from datetime import datetime
-import pymc as pm
 import os
+from datetime import datetime
 
 
 def search_scholar(query: str, pool_size: int = 100, sort_by: str = "relevance", wait_for_user=False):
@@ -121,17 +120,26 @@ def search_scholar(query: str, pool_size: int = 100, sort_by: str = "relevance",
     return results
 
 
-def rank_papers(
-    query: str,
-    papers: list,
-    max_results: int = 20,
-    w_sim: float = 0.5,
-    w_cites: float = 0.3,
-    w_recency: float = 0.2,
-):
+# --------------------
+# Modes configuration
+# --------------------
+MODES = {
+    "balanced": dict(w_sim=0.5, w_cites=0.3, w_recency=0.2),
+    "recent": dict(w_sim=0.3, w_cites=0.2, w_recency=0.5),
+    "famous": dict(w_sim=0.2, w_cites=0.7, w_recency=0.1),
+    "influential": dict(w_sim=0.4, w_cites=0.4, w_recency=0.2),
+    "hot": dict(w_sim=0.3, w_cites=0.4, w_recency=0.3),
+}
+
+
+def rank_papers(query: str, papers: list, max_results: int = 20, mode: str = "balanced"):
     """
-    Heuristic filtering stage: rank by similarity + citations + recency.
+    Rank papers according to the selected mode.
+    Modes control weighting of similarity, citations, and recency.
     """
+    weights = MODES.get(mode, MODES["balanced"])
+    w_sim, w_cites, w_recency = weights["w_sim"], weights["w_cites"], weights["w_recency"]
+
     scored = []
     for paper in papers:
         # similarity (title > snippet)
@@ -157,56 +165,12 @@ def rank_papers(
     return [p for _, p in scored[:max_results]]
 
 
-def bayesian_rank_papers(query: str, papers: list, max_results: int = 20):
-    """
-    Bayesian linear model filter:
-    Uses similarity, citation score (per year), and recency.
-    Returns top max_results papers by posterior predictive mean relevance.
-    """
-    X, paper_list = [], []
-    current_year = datetime.now().year
-
-    for paper in papers:
-        sim = 0.0
-        if paper.get("title"):
-            sim = SequenceMatcher(None, query.lower(), paper["title"].lower()).ratio()
-        elif paper.get("snippet"):
-            sim = SequenceMatcher(None, query.lower(), paper["snippet"].lower()).ratio()
-
-        cites = paper.get("citations") or 0
-        year = paper.get("year") or current_year
-        age = max(1, current_year - year + 1)
-        citation_score = cites / age
-
-        recency = np.exp(-(current_year - year) / 5.0) if paper.get("year") else 0.0
-
-        X.append([sim, citation_score, recency])
-        paper_list.append(paper)
-
-    X = np.array(X)
-
-    with pm.Model() as model:
-        w = pm.Normal("w", mu=[0.8, 0.5, 0.5], sigma=[0.3, 0.3, 0.3], shape=3)
-        sigma = pm.HalfNormal("sigma", sigma=1.0)
-        mu = pm.math.dot(X, w)
-        pm.Normal("relevance", mu=mu, sigma=sigma, observed=np.ones(len(X)))
-        trace = pm.sample(1000, tune=500, chains=2, cores=2, progressbar=True)
-
-    w_mean = trace.posterior["w"].mean(dim=["chain", "draw"]).values
-    scores = X @ w_mean
-    ranked = sorted(zip(scores, paper_list), key=lambda x: x[0], reverse=True)
-
-    return [p for _, p in ranked[:max_results]]
-
-
 if __name__ == "__main__":
     print("🔎 Testing scholar scraper...\n")
     pool = search_scholar("bayesian regression", pool_size=10, sort_by="relevance")
-    ranked = rank_papers("bayesian regression", pool, max_results=5)
+    ranked = rank_papers("bayesian regression", pool, max_results=5, mode="hot")
 
     for idx, r in enumerate(ranked, 1):
         print(f"\n=== Ranked Result {idx} ===")
         for key, value in r.items():
             print(f"{key}: {value}")
-
-

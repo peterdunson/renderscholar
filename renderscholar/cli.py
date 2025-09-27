@@ -16,7 +16,6 @@ from pygments.formatters import HtmlFormatter
 from renderscholar.scholar import (
     search_scholar,
     rank_papers,
-    bayesian_rank_papers,
 )
 from renderscholar.models import format_results_for_llm
 
@@ -175,7 +174,12 @@ def main() -> int:
     ap.add_argument("query", help="Search query")
     ap.add_argument("--pool-size", type=int, default=100, help="Number of papers to scrape")
     ap.add_argument("--filter-top-k", type=int, default=20, help="Number of top papers to keep after ranking")
-    ap.add_argument("--algo", choices=["standard", "bayesian"], default="standard", help="Ranking algorithm")
+    ap.add_argument(
+        "--mode",
+        choices=["balanced", "recent", "famous", "influential", "hot"],
+        default="balanced",
+        help="Ranking mode: balanced, recent, famous, influential, hot"
+    )
     ap.add_argument("-o", "--out", help="Output HTML file path (default: derived from query)")
     ap.add_argument("--no-open", action="store_true", help="Don't open HTML in browser after generation")
     args = ap.parse_args()
@@ -187,12 +191,9 @@ def main() -> int:
     pool = search_scholar(args.query, pool_size=args.pool_size, sort_by="relevance", wait_for_user=True)
     print(f"✓ Retrieved {len(pool)} raw papers", file=sys.stderr)
 
-    if args.algo == "bayesian":
-        ranked = bayesian_rank_papers(args.query, pool, max_results=args.filter_top_k)
-    else:
-        ranked = rank_papers(args.query, pool, max_results=args.filter_top_k)
+    ranked = rank_papers(args.query, pool, max_results=args.filter_top_k, mode=args.mode)
 
-    print(f"✓ Filtered down to {len(ranked)} papers", file=sys.stderr)
+    print(f"✓ Filtered down to {len(ranked)} papers (mode={args.mode})", file=sys.stderr)
 
     html_out = build_html(args.query, ranked)
 

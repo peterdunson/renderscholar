@@ -1,6 +1,8 @@
 # 📚 renderscholar
 
-**renderscholar** lets you search Google Scholar from the terminal, scrape papers, and render them into a static HTML page.  
+**renderscholar** lets you search Google Scholar from the terminal, scrape real papers, and render them into a static HTML page.  
+No more hallucinated citations from LLMs — everything comes straight from Scholar.
+
 The HTML includes two views:
 
 - 👤 **Human View** — nicely formatted papers (title, authors, year, citations, link, snippet).  
@@ -40,24 +42,31 @@ Options:
 
 * `--pool-size N` → number of raw results to scrape (default: 100)
 * `--filter-top-k N` → number of top papers to keep after ranking (default: 20)
-* `--algo standard|bayesian` → ranking algorithm
-
-  * `standard` → fast heuristic (query similarity + citations + recency)
-  * `bayesian` → Bayesian linear model (slower, more nuanced)
+* `--mode balanced|recent|famous|influential|hot` → ranking style (default: balanced)
 * `--no-open` → don’t auto-open in browser
 * `-o out.html` → write to a specific file instead of a temp file
+
+### 📊 Modes
+
+Each mode changes how papers are ranked (weights on query similarity, citation count, and recency):
+
+* **balanced** → even weighting (default)
+* **recent** → favors newest work
+* **famous** → favors most cited classics
+* **influential** → balances impact + relevance
+* **hot** → boosts both citations and recency (trending work)
 
 Example:
 
 ```bash
-renderscholar "Bayesian factor models in genomics" --pool-size 80 --filter-top-k 15 --algo bayesian
+renderscholar "Bayesian factor models in genomics" --pool-size 80 --filter-top-k 15 --mode hot
 ```
 
 This will:
 
 1. Open Scholar in a Chromium browser (so you can solve captcha if needed).
 2. Scrape ~80 results.
-3. Rank and filter to the top 15.
+3. Rank and filter to the top 15 (favoring “hot” papers).
 4. Render an HTML file and open it in your browser.
 
 ---
@@ -66,11 +75,11 @@ This will:
 
 * 👤 **Human View**
 
-  ![Human View Screenshot](docs/human_view.png)
+  Nicely formatted papers with titles, authors, years, citations, snippets, and links.
 
 * 🤖 **LLM View**
 
-  ![LLM View Screenshot](docs/llm_view.png)
+  Copiable plain text, ready for ChatGPT/Claude/etc. — no risk of hallucinated papers.
 
 ---
 
@@ -87,4 +96,6 @@ This will:
 MIT © 2025 Peter Dunson
 
 ```
+
+---
 

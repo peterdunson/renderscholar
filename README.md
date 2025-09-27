@@ -95,7 +95,4 @@ This will:
 
 MIT © 2025 Peter Dunson
 
-```
-
----
 

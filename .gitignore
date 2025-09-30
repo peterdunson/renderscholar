@@ -1,0 +1,23 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Packaging / build artifacts
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+.venv/
+env/
+venv/
+
+# Runtime flags
+scrape_done.txt
+captcha_flag.txt
+
+# OS junk
+.DS_Store
+Thumbs.db

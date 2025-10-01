@@ -138,6 +138,7 @@ MODES = {
     "influential": dict(w_sim=0.4, w_cites=0.4, w_recency=0.2),
     "hot": dict(w_sim=0.3, w_cites=0.4, w_recency=0.3),
     "semantic": None,  # special handling
+    "single": dict(w_sim=1.0, w_cites=0.0, w_recency=0.0),  # NEW
 }
 
 
@@ -174,6 +175,10 @@ def rank_papers(query: str, papers: list, max_results: int = 20, mode: str = "ba
         scored.append((score, paper))
 
     scored.sort(key=lambda x: x[0], reverse=True)
+    # special case for "single" → only return the top paper
+    if mode == "single":
+        return [scored[0][1]] if scored else []
+
     return [p for _, p in scored[:max_results]]
 
 

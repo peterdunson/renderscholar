@@ -65,6 +65,7 @@ Each mode changes how papers are ranked (weights on query similarity, citation c
 * **influential** → balances impact + relevance
 * **hot** → boosts both citations and recency (trending work)
 * **semantic** → uses transformer embeddings for semantic similarity (requires optional install)
+* **single** → scrapes only the top 10 results and returns the single most relevant paper (best for quick lookups)
 
 Example:
 

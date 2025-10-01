@@ -176,13 +176,18 @@ def main() -> int:
     ap.add_argument("--filter-top-k", type=int, default=20, help="Number of top papers to keep after ranking")
     ap.add_argument(
         "--mode",
-        choices=["balanced", "recent", "famous", "influential", "hot", "semantic"],
+        choices=["balanced", "recent", "famous", "influential", "hot", "semantic", "single"],
         default="balanced",
-        help="Ranking mode: balanced, recent, famous, influential, hot, semantic"
+        help="Ranking mode: balanced, recent, famous, influential, hot, semantic, single"
     )
     ap.add_argument("-o", "--out", help="Output HTML file path (default: derived from query)")
     ap.add_argument("--no-open", action="store_true", help="Don't open HTML in browser after generation")
     args = ap.parse_args()
+
+        # Special case: single mode → only scrape top 10 results
+    if args.mode == "single":
+        args.pool_size = 10
+        args.filter_top_k = 1
 
     if args.out is None:
         args.out = str(derive_temp_output_path(args.query))

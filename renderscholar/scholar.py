@@ -9,6 +9,14 @@ from difflib import SequenceMatcher
 import numpy as np
 import os
 from datetime import datetime
+import os
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
+
+# NEW: semantic search
+from sentence_transformers import SentenceTransformer, util
+
+_semantic_model = None  # cache globally
 
 
 def search_scholar(query: str, pool_size: int = 100, sort_by: str = "relevance", wait_for_user=False):
@@ -129,6 +137,7 @@ MODES = {
     "famous": dict(w_sim=0.2, w_cites=0.7, w_recency=0.1),
     "influential": dict(w_sim=0.4, w_cites=0.4, w_recency=0.2),
     "hot": dict(w_sim=0.3, w_cites=0.4, w_recency=0.3),
+    "semantic": None,  # special handling
 }
 
 
@@ -137,6 +146,9 @@ def rank_papers(query: str, papers: list, max_results: int = 20, mode: str = "ba
     Rank papers according to the selected mode.
     Modes control weighting of similarity, citations, and recency.
     """
+    if mode == "semantic":
+        return semantic_rank_papers(query, papers, max_results=max_results)
+
     weights = MODES.get(mode, MODES["balanced"])
     w_sim, w_cites, w_recency = weights["w_sim"], weights["w_cites"], weights["w_recency"]
 
@@ -165,10 +177,46 @@ def rank_papers(query: str, papers: list, max_results: int = 20, mode: str = "ba
     return [p for _, p in scored[:max_results]]
 
 
+def semantic_rank_papers(query: str, papers: list, max_results: int = 20):
+    """
+    Rank papers using semantic embeddings + citations + recency.
+    """
+    global _semantic_model
+    if _semantic_model is None:
+        print("⏳ Loading semantic model (all-MiniLM-L6-v2)...")
+        _semantic_model = SentenceTransformer("all-MiniLM-L6-v2")
+
+    query_emb = _semantic_model.encode(query, convert_to_tensor=True)
+
+    scored = []
+    for paper in papers:
+        text = paper.get("title", "") + " " + (paper.get("snippet") or "")
+        if not text.strip():
+            continue
+
+        doc_emb = _semantic_model.encode(text, convert_to_tensor=True)
+        sim = float(util.cos_sim(query_emb, doc_emb).item())
+
+        # citations (log scaled)
+        cites = math.log1p(paper.get("citations") or 0)
+
+        # recency boost
+        recency = 0.0
+        if paper.get("year"):
+            recency = max(0, (paper["year"] - 2000) / 25.0)
+
+        # weighted score (semantic similarity gets higher weight)
+        score = (0.6 * sim) + (0.25 * (cites / 10)) + (0.15 * recency)
+        scored.append((score, paper))
+
+    scored.sort(key=lambda x: x[0], reverse=True)
+    return [p for _, p in scored[:max_results]]
+
+
 if __name__ == "__main__":
     print("🔎 Testing scholar scraper...\n")
     pool = search_scholar("bayesian regression", pool_size=10, sort_by="relevance")
-    ranked = rank_papers("bayesian regression", pool, max_results=5, mode="hot")
+    ranked = rank_papers("bayesian regression", pool, max_results=5, mode="semantic")
 
     for idx, r in enumerate(ranked, 1):
         print(f"\n=== Ranked Result {idx} ===")

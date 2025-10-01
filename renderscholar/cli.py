@@ -176,9 +176,9 @@ def main() -> int:
     ap.add_argument("--filter-top-k", type=int, default=20, help="Number of top papers to keep after ranking")
     ap.add_argument(
         "--mode",
-        choices=["balanced", "recent", "famous", "influential", "hot"],
+        choices=["balanced", "recent", "famous", "influential", "hot", "semantic"],
         default="balanced",
-        help="Ranking mode: balanced, recent, famous, influential, hot"
+        help="Ranking mode: balanced, recent, famous, influential, hot, semantic"
     )
     ap.add_argument("-o", "--out", help="Output HTML file path (default: derived from query)")
     ap.add_argument("--no-open", action="store_true", help="Don't open HTML in browser after generation")
@@ -209,3 +209,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+

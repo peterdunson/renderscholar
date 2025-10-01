@@ -38,6 +38,11 @@ dependencies = [
     "markdown>=3.8.2",
 ]
 
+[project.optional-dependencies]
+semantic = [
+    "sentence-transformers>=2.2.2",
+]
+
 [project.scripts]
 renderscholar = "renderscholar.cli:main"
 

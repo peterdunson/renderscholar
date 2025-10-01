@@ -28,6 +28,15 @@ Playwright requires one extra step (to install the headless Chromium browser it 
 playwright install chromium
 ```
 
+### Optional: Semantic mode
+
+If you want to enable the **`semantic`** ranking mode (using transformer embeddings for smarter similarity),
+install with extras:
+
+```bash
+pip install "git+https://github.com/peterdunson/renderscholar.git#egg=renderscholar[semantic]"
+```
+
 ---
 
 ## 🚀 Usage
@@ -42,7 +51,7 @@ Options:
 
 * `--pool-size N` → number of raw results to scrape (default: 100)
 * `--filter-top-k N` → number of top papers to keep after ranking (default: 20)
-* `--mode balanced|recent|famous|influential|hot` → ranking style (default: balanced)
+* `--mode balanced|recent|famous|influential|hot|semantic` → ranking style (default: balanced)
 * `--no-open` → don’t auto-open in browser
 * `-o out.html` → write to a specific file instead of a temp file
 
@@ -55,6 +64,7 @@ Each mode changes how papers are ranked (weights on query similarity, citation c
 * **famous** → favors most cited classics
 * **influential** → balances impact + relevance
 * **hot** → boosts both citations and recency (trending work)
+* **semantic** → uses transformer embeddings for semantic similarity (requires optional install)
 
 Example:
 
@@ -74,11 +84,9 @@ This will:
 ## 📂 Output
 
 * 👤 **Human View**
-
   Nicely formatted papers with titles, authors, years, citations, snippets, and links.
 
 * 🤖 **LLM View**
-
   Copiable plain text, ready for ChatGPT/Claude/etc. — no risk of hallucinated papers.
 
 ---
@@ -94,5 +102,3 @@ This will:
 ## 📄 License
 
 MIT © 2025 Peter Dunson
-
-

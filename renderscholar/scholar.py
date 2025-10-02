@@ -27,7 +27,7 @@ def search_scholar(query: str, pool_size: int = 100, sort_by: str = "relevance",
     If wait_for_user=True, pauses until user clears captcha.
     """
     results = []
-    seen_titles = set()  # 🔹 Track titles to prevent duplicates
+    seen_titles = set()  # Track duplicates
     encoded_query = quote_plus(query)
     per_page = 10
     pages = (pool_size + per_page - 1) // per_page
@@ -56,23 +56,32 @@ def search_scholar(query: str, pool_size: int = 100, sort_by: str = "relevance",
 
             page.goto(url)
 
-            # 🔹 Try to find results, but if timeout just check what we got
+            # Use longer timeout on first page, shorter on subsequent pages
+            timeout = 30000 if len(results) == 0 else 5000
+
             try:
-                page.wait_for_selector(".gs_ri, .gs_r, .gs_or", timeout=15000)
+                page.wait_for_selector(".gs_ri, .gs_r, .gs_or", timeout=timeout)
             except Exception:
-                # Timeout - check if page is actually empty or if it's a real captcha
+                # Check if page is empty (end of results) or captcha
                 html_content = page.content()
                 soup = BeautifulSoup(html_content, "html.parser")
                 entries_check = soup.select(".gs_ri, .gs_r, .gs_or")
                 
-                # If no entries and we already have some results, just stop here
-                if len(entries_check) == 0:
-                    if len(results) > 0:
-                        print(f"⚠️ No more results on page {i+1}. Returning {len(results)} papers found so far.")
-                        break
-                    else:
-                        print(f"⚠️ No results found for this query.")
-                        break
+                if len(entries_check) == 0 and len(results) > 0:
+                    # Empty page after getting results = end of results
+                    print(f"⚠️ No more results on page {i+1}. Returning {len(results)} papers.")
+                    break
+                
+                # Otherwise it's captcha on first page
+                print("⚠️ Captcha detected, please solve it in the browser.")
+
+                if wait_for_user:
+                    with open("captcha_flag.txt", "w") as f:
+                        f.write("waiting")
+                    while os.path.exists("captcha_flag.txt"):
+                        time.sleep(1)
+
+                page.wait_for_selector(".gs_ri, .gs_r, .gs_or", timeout=0)
 
             # parse entries
             html_content = page.content()
@@ -80,29 +89,31 @@ def search_scholar(query: str, pool_size: int = 100, sort_by: str = "relevance",
             entries = soup.select(".gs_ri, .gs_r, .gs_or")
             print(f"DEBUG: Page {i+1}, found {len(entries)} entries")
 
-            # 🔹 If no entries found, we've reached the end
             if len(entries) == 0:
-                print(f"⚠️ No entries found on page {i+1}. Stopping.")
+                print(f"⚠️ No entries on page {i+1}. Returning {len(results)} papers.")
                 break
 
-            # 🔹 Track how many new papers we add from this page
             papers_added_this_page = 0
 
             for entry in entries:
                 title_tag = entry.select_one("h3 a")
-                title = html.unescape(title_tag.text.strip()) if title_tag else "No title"
+                title = html.unescape(title_tag.text.strip()) if title_tag else None
+                link = title_tag["href"] if title_tag else None
                 
-                # 🔹 Check for duplicate FIRST, before processing
+                # Skip entries with no title or link (junk)
+                if not title or not link:
+                    print(f"DEBUG: Skipping entry with no valid title or link")
+                    continue
+                
+                # Skip duplicates
                 title_normalized = title.lower().strip()
                 if title_normalized in seen_titles:
                     print(f"DEBUG: Skipping duplicate: {title[:50]}...")
                     continue
                 
-                # 🔹 Mark as seen IMMEDIATELY after checking
                 seen_titles.add(title_normalized)
                 papers_added_this_page += 1
                 
-                link = title_tag["href"] if title_tag else None
                 snippet = entry.select_one(".gs_rs")
                 snippet_text = html.unescape(snippet.text.strip()) if snippet else ""
                 authors_year = entry.select_one(".gs_a")
@@ -141,9 +152,8 @@ def search_scholar(query: str, pool_size: int = 100, sort_by: str = "relevance",
                     "year": year
                 })
 
-            # 🔹 If we didn't add any new papers this page, we've hit the end
             if papers_added_this_page == 0:
-                print(f"⚠️ No new papers found on page {i+1} (all duplicates or end of results). Stopping.")
+                print(f"⚠️ No new papers on page {i+1} (all duplicates). Returning {len(results)} papers.")
                 break
 
             print(f"DEBUG: Added {papers_added_this_page} new papers from page {i+1}")
@@ -169,7 +179,7 @@ MODES = {
     "influential": dict(w_sim=0.4, w_cites=0.4, w_recency=0.2),
     "hot": dict(w_sim=0.3, w_cites=0.4, w_recency=0.3),
     "semantic": None,  # special handling
-    "single": dict(w_sim=0.5, w_cites=0.3, w_recency=0.2),  # NEW
+    "single": dict(w_sim=1.0, w_cites=0.0, w_recency=0.0),  # NEW
 }
 
 
@@ -258,3 +268,6 @@ if __name__ == "__main__":
         print(f"\n=== Ranked Result {idx} ===")
         for key, value in r.items():
             print(f"{key}: {value}")
+
+
+            

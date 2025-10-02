@@ -163,11 +163,11 @@ MODES = {
     "influential": dict(w_sim=0.4, w_cites=0.4, w_recency=0.2),
     "hot": dict(w_sim=0.3, w_cites=0.4, w_recency=0.3),
     "semantic": None,  # special handling
-    "single": dict(w_sim=1.0, w_cites=0.0, w_recency=0.0),  # NEW
+    "single": dict(w_sim=0.5, w_cites=0.3, w_recency=0.2),  # NEW
 }
 
 
-def rank_papers(query: str, papers: list, max_results: int = 20, mode: str = "balanced"):
+def rank_papers(query: str, papers: list, max_results: int = 10, mode: str = "balanced"):
     """
     Rank papers according to the selected mode.
     Modes control weighting of similarity, citations, and recency.
@@ -207,7 +207,7 @@ def rank_papers(query: str, papers: list, max_results: int = 20, mode: str = "ba
     return [p for _, p in scored[:max_results]]
 
 
-def semantic_rank_papers(query: str, papers: list, max_results: int = 20):
+def semantic_rank_papers(query: str, papers: list, max_results: int = 10):
     """
     Rank papers using semantic embeddings + citations + recency.
     """

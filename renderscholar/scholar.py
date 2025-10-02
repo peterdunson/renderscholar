@@ -27,6 +27,7 @@ def search_scholar(query: str, pool_size: int = 100, sort_by: str = "relevance",
     If wait_for_user=True, pauses until user clears captcha.
     """
     results = []
+    seen_titles = set()  # 🔹 Track titles to prevent duplicates
     encoded_query = quote_plus(query)
     per_page = 10
     pages = (pool_size + per_page - 1) // per_page
@@ -55,9 +56,29 @@ def search_scholar(query: str, pool_size: int = 100, sort_by: str = "relevance",
 
             page.goto(url)
 
+            # 🔹 Check for captcha OR no results
             try:
                 page.wait_for_selector(".gs_ri, .gs_r, .gs_or", timeout=15000)
             except Exception:
+                # Check if we've hit the end of results (no captcha, just no more papers)
+                html_content = page.content()
+                soup = BeautifulSoup(html_content, "html.parser")
+                
+                # Look for "no results" indicators or check if there are any entries
+                entries_check = soup.select(".gs_ri, .gs_r, .gs_or")
+                no_results_text = soup.find(string=re.compile(r"did not match any articles|No results found", re.I))
+                
+                # If we have results already and this page is empty, we've reached the end
+                if len(entries_check) == 0 and len(results) > 0:
+                    print(f"⚠️ No more results available (reached end at page {i+1})")
+                    break
+                
+                # If there's explicit "no results" text
+                if no_results_text:
+                    print(f"⚠️ No results found on page {i+1}. Stopping.")
+                    break
+                
+                # Otherwise it's likely a captcha
                 print("⚠️ Captcha detected, please solve it in the browser.")
 
                 if wait_for_user:
@@ -66,17 +87,35 @@ def search_scholar(query: str, pool_size: int = 100, sort_by: str = "relevance",
                     while os.path.exists("captcha_flag.txt"):
                         time.sleep(1)
 
-                page.wait_for_selector(".gs_ri, .gs_r, .gs_or", timeout=0)
+                # Try again with longer timeout after captcha solve
+                try:
+                    page.wait_for_selector(".gs_ri, .gs_r, .gs_or", timeout=30000)
+                except Exception:
+                    print(f"⚠️ Still no results after waiting. Stopping at page {i+1}.")
+                    break
 
             # parse entries
             html_content = page.content()
             soup = BeautifulSoup(html_content, "html.parser")
             entries = soup.select(".gs_ri, .gs_r, .gs_or")
-            print(f"DEBUG: Page {i}, found {len(entries)} entries")
+            print(f"DEBUG: Page {i+1}, found {len(entries)} entries")
+
+            # 🔹 If no entries found, we've reached the end
+            if len(entries) == 0:
+                print(f"⚠️ No entries found on page {i+1}. Stopping.")
+                break
 
             for entry in entries:
                 title_tag = entry.select_one("h3 a")
                 title = html.unescape(title_tag.text.strip()) if title_tag else "No title"
+                
+                # 🔹 Skip duplicate titles
+                title_normalized = title.lower().strip()
+                if title_normalized in seen_titles:
+                    print(f"DEBUG: Skipping duplicate: {title[:50]}...")
+                    continue
+                seen_titles.add(title_normalized)
+                
                 link = title_tag["href"] if title_tag else None
                 snippet = entry.select_one(".gs_rs")
                 snippet_text = html.unescape(snippet.text.strip()) if snippet else ""
@@ -138,7 +177,7 @@ MODES = {
     "influential": dict(w_sim=0.4, w_cites=0.4, w_recency=0.2),
     "hot": dict(w_sim=0.3, w_cites=0.4, w_recency=0.3),
     "semantic": None,  # special handling
-    "single": dict(w_sim=1.0, w_cites=0.0, w_recency=0.0),  # NEW
+    "single": dict(w_sim=0.5, w_cites=0.3, w_recency=0.2),  # NEW
 }
 
 

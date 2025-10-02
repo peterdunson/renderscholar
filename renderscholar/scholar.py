@@ -56,43 +56,23 @@ def search_scholar(query: str, pool_size: int = 100, sort_by: str = "relevance",
 
             page.goto(url)
 
-            # 🔹 Check for captcha OR no results
+            # 🔹 Try to find results, but if timeout just check what we got
             try:
                 page.wait_for_selector(".gs_ri, .gs_r, .gs_or", timeout=15000)
             except Exception:
-                # Check if we've hit the end of results (no captcha, just no more papers)
+                # Timeout - check if page is actually empty or if it's a real captcha
                 html_content = page.content()
                 soup = BeautifulSoup(html_content, "html.parser")
-                
-                # Look for "no results" indicators or check if there are any entries
                 entries_check = soup.select(".gs_ri, .gs_r, .gs_or")
-                no_results_text = soup.find(string=re.compile(r"did not match any articles|No results found", re.I))
                 
-                # If we have results already and this page is empty, we've reached the end
-                if len(entries_check) == 0 and len(results) > 0:
-                    print(f"⚠️ No more results available (reached end at page {i+1})")
-                    break
-                
-                # If there's explicit "no results" text
-                if no_results_text:
-                    print(f"⚠️ No results found on page {i+1}. Stopping.")
-                    break
-                
-                # Otherwise it's likely a captcha
-                print("⚠️ Captcha detected, please solve it in the browser.")
-
-                if wait_for_user:
-                    with open("captcha_flag.txt", "w") as f:
-                        f.write("waiting")
-                    while os.path.exists("captcha_flag.txt"):
-                        time.sleep(1)
-
-                # Try again with longer timeout after captcha solve
-                try:
-                    page.wait_for_selector(".gs_ri, .gs_r, .gs_or", timeout=30000)
-                except Exception:
-                    print(f"⚠️ Still no results after waiting. Stopping at page {i+1}.")
-                    break
+                # If no entries and we already have some results, just stop here
+                if len(entries_check) == 0:
+                    if len(results) > 0:
+                        print(f"⚠️ No more results on page {i+1}. Returning {len(results)} papers found so far.")
+                        break
+                    else:
+                        print(f"⚠️ No results found for this query.")
+                        break
 
             # parse entries
             html_content = page.content()
@@ -105,16 +85,22 @@ def search_scholar(query: str, pool_size: int = 100, sort_by: str = "relevance",
                 print(f"⚠️ No entries found on page {i+1}. Stopping.")
                 break
 
+            # 🔹 Track how many new papers we add from this page
+            papers_added_this_page = 0
+
             for entry in entries:
                 title_tag = entry.select_one("h3 a")
                 title = html.unescape(title_tag.text.strip()) if title_tag else "No title"
                 
-                # 🔹 Skip duplicate titles
+                # 🔹 Check for duplicate FIRST, before processing
                 title_normalized = title.lower().strip()
                 if title_normalized in seen_titles:
                     print(f"DEBUG: Skipping duplicate: {title[:50]}...")
                     continue
+                
+                # 🔹 Mark as seen IMMEDIATELY after checking
                 seen_titles.add(title_normalized)
+                papers_added_this_page += 1
                 
                 link = title_tag["href"] if title_tag else None
                 snippet = entry.select_one(".gs_rs")
@@ -155,6 +141,12 @@ def search_scholar(query: str, pool_size: int = 100, sort_by: str = "relevance",
                     "year": year
                 })
 
+            # 🔹 If we didn't add any new papers this page, we've hit the end
+            if papers_added_this_page == 0:
+                print(f"⚠️ No new papers found on page {i+1} (all duplicates or end of results). Stopping.")
+                break
+
+            print(f"DEBUG: Added {papers_added_this_page} new papers from page {i+1}")
             time.sleep(1)
 
         browser.close()

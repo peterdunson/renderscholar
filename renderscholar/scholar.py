@@ -27,7 +27,6 @@ def search_scholar(query: str, pool_size: int = 100, sort_by: str = "relevance",
     If wait_for_user=True, pauses until user clears captcha.
     """
     results = []
-    seen_titles = set()  # Track duplicates
     encoded_query = quote_plus(query)
     per_page = 10
     pages = (pool_size + per_page - 1) // per_page
@@ -93,8 +92,6 @@ def search_scholar(query: str, pool_size: int = 100, sort_by: str = "relevance",
                 print(f"⚠️ No entries on page {i+1}. Returning {len(results)} papers.")
                 break
 
-            papers_added_this_page = 0
-
             for entry in entries:
                 title_tag = entry.select_one("h3 a")
                 title = html.unescape(title_tag.text.strip()) if title_tag else None
@@ -104,15 +101,6 @@ def search_scholar(query: str, pool_size: int = 100, sort_by: str = "relevance",
                 if not title or not link:
                     print(f"DEBUG: Skipping entry with no valid title or link")
                     continue
-                
-                # Skip duplicates
-                title_normalized = title.lower().strip()
-                if title_normalized in seen_titles:
-                    print(f"DEBUG: Skipping duplicate: {title[:50]}...")
-                    continue
-                
-                seen_titles.add(title_normalized)
-                papers_added_this_page += 1
                 
                 snippet = entry.select_one(".gs_rs")
                 snippet_text = html.unescape(snippet.text.strip()) if snippet else ""
@@ -152,11 +140,7 @@ def search_scholar(query: str, pool_size: int = 100, sort_by: str = "relevance",
                     "year": year
                 })
 
-            if papers_added_this_page == 0:
-                print(f"⚠️ No new papers on page {i+1} (all duplicates). Returning {len(results)} papers.")
-                break
-
-            print(f"DEBUG: Added {papers_added_this_page} new papers from page {i+1}")
+            print(f"DEBUG: Added {len(entries)} entries from page {i+1}")
             time.sleep(1)
 
         browser.close()
@@ -268,6 +252,3 @@ if __name__ == "__main__":
         print(f"\n=== Ranked Result {idx} ===")
         for key, value in r.items():
             print(f"{key}: {value}")
-
-
-            

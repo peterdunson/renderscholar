@@ -335,7 +335,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="Search Google Scholar and render results into HTML")
     ap.add_argument("query", help="Search query")
     ap.add_argument("--pool-size", type=int, default=100, help="Number of papers to scrape")
-    ap.add_argument("--filter-top-k", type=int, default=20, help="Number of top papers to keep after ranking")
+    ap.add_argument("--filter-top-k", type=int, default=10, help="Number of top papers to keep after ranking")
     ap.add_argument(
         "--mode",
         choices=["balanced", "recent", "famous", "influential", "hot", "semantic", "single"],

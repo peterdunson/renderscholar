@@ -35,15 +35,21 @@ def build_html(query: str, papers: List[dict]) -> str:
         citations = p.get("citations") or 0
         year = p.get("year") or "?"
 
-        human_sections.append(f"""
+        paper_html = f"""
         <section class="paper">
           <h2>{i}. {title}</h2>
-          <p><strong>Authors/Year:</strong> {authors_year} ({year})</p>
-          <p><strong>Citations:</strong> {citations}</p>
-          <p>{snippet}</p>
-          <p><a href="{link}" target="_blank">🔗 Link</a></p>
+          <div class="meta">
+            <span class="authors">👥 {authors_year}</span>
+            <span class="year">📅 {year}</span>
+            <span class="citations">📊 {citations} citations</span>
+          </div>
+          <div class="snippet">{snippet}</div>
+          <div class="links">
+            <a href="{link}" target="_blank" class="btn btn-primary">🔗 View Paper</a>
+          </div>
         </section>
-        """)
+        """
+        human_sections.append(paper_html)
 
     human_html = "\n".join(human_sections)
 
@@ -57,52 +63,206 @@ def build_html(query: str, papers: List[dict]) -> str:
 <meta charset="utf-8" />
 <title>renderscholar – {html.escape(query)}</title>
 <style>
+  * {{
+    box-sizing: border-box;
+  }}
   body {{
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial;
-    margin: 0; padding: 0; line-height: 1.45;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+    background: linear-gradient(135deg, #e63946 0%, #f4a261 100%);
+    min-height: 100vh;
   }}
-  .container {{ max-width: 900px; margin: 0 auto; padding: 1rem; }}
-  h1 {{ margin-bottom: 1rem; }}
-  .paper {{ border-bottom: 1px solid #eee; padding: 1rem 0; }}
-  .paper h2 {{ margin: 0 0 0.5rem 0; font-size: 1.1rem; }}
-  .paper p {{ margin: 0.25rem 0; }}
-  .view-toggle {{
-    margin: 1rem 0;
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-  }}
-  .toggle-btn {{
-    padding: 0.5rem 1rem;
-    border: 1px solid #d1d9e0;
+  .container {{ 
+    max-width: 1100px; 
+    margin: 0 auto; 
+    padding: 2rem; 
     background: white;
-    cursor: pointer;
-    border-radius: 6px;
+    min-height: 100vh;
+    box-shadow: 0 0 50px rgba(0,0,0,0.1);
+  }}
+  h1 {{ 
+    margin-bottom: 0.5rem; 
+    color: #2d3748;
+    font-size: 2.5rem;
+    background: linear-gradient(135deg, #e63946 0%, #f4a261 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }}
+  .summary {{
+    color: #718096;
+    margin-bottom: 2rem;
+    font-size: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e2e8f0;
+  }}
+  .paper {{ 
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 2rem; 
+    margin-bottom: 2rem;
+    background: white;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }}
+  .paper:hover {{
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+  }}
+  .paper h2 {{ 
+    margin: 0 0 1rem 0; 
+    font-size: 1.4rem;
+    color: #2d3748;
+    line-height: 1.4;
+  }}
+  .meta {{
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
     font-size: 0.9rem;
   }}
-  .toggle-btn.active {{
-    background: #0366d6;
+  .meta span {{
+    color: #4a5568;
+  }}
+  .authors {{
+    font-weight: 500;
+  }}
+  .year {{
+    color: #718096;
+  }}
+  .citations {{
+    color: #e63946;
+    font-weight: 600;
+  }}
+  .snippet {{
+    background: #f7fafc;
+    padding: 1.25rem;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    color: #2d3748;
+    line-height: 1.7;
+    margin-bottom: 1rem;
+    border-left: 4px solid #e63946;
+  }}
+  .links {{
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }}
+  .btn {{
+    padding: 0.6rem 1.25rem;
+    border: 2px solid #e63946;
+    background: white;
+    color: #e63946;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    display: inline-block;
+  }}
+  .btn:hover {{
+    background: #e63946;
     color: white;
-    border-color: #0366d6;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(230, 57, 70, 0.3);
+  }}
+  .btn-primary {{
+    background: linear-gradient(135deg, #e63946 0%, #f4a261 100%);
+    color: white;
+    border: none;
+  }}
+  .btn-primary:hover {{
+    background: linear-gradient(135deg, #f4a261 0%, #e63946 100%);
+    box-shadow: 0 4px 12px rgba(230, 57, 70, 0.4);
+  }}
+  .view-toggle {{
+    margin: 2rem 0;
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid #e2e8f0;
+  }}
+  .view-toggle strong {{
+    color: #2d3748;
+    font-size: 1.1rem;
+  }}
+  .toggle-btn {{
+    padding: 0.65rem 1.5rem;
+    border: 2px solid #cbd5e0;
+    background: white;
+    cursor: pointer;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.2s;
+    color: #4a5568;
+  }}
+  .toggle-btn.active {{
+    background: linear-gradient(135deg, #e63946 0%, #f4a261 100%);
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 4px 10px rgba(230, 57, 70, 0.3);
   }}
   .toggle-btn:hover:not(.active) {{
-    background: #f6f8fa;
+    background: #f7fafc;
+    border-color: #e63946;
+    color: #e63946;
   }}
   #llm-view {{ display: none; }}
   #llm-text {{
     width: 100%;
     height: 70vh;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-size: 0.85em;
-    border: 1px solid #d1d9e0;
-    border-radius: 6px;
-    padding: 1rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+    font-size: 0.9rem;
+    border: 2px solid #cbd5e0;
+    border-radius: 12px;
+    padding: 1.5rem;
     resize: vertical;
+    background: #f7fafc;
+    color: #2d3748;
+    line-height: 1.6;
+  }}
+  .llm-section {{
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  }}
+  .llm-section h2 {{
+    margin-top: 0;
+    color: #2d3748;
+    font-size: 1.8rem;
+  }}
+  .llm-section p {{
+    color: #4a5568;
+    margin-bottom: 1.5rem;
   }}
   .copy-hint {{
-    margin-top: 0.5rem;
-    color: #666;
-    font-size: 0.9em;
+    margin-top: 1rem;
+    padding: 1rem 1.25rem;
+    background: linear-gradient(135deg, rgba(230, 57, 70, 0.1) 0%, rgba(244, 162, 97, 0.1) 100%);
+    border-left: 4px solid #e63946;
+    color: #2d3748;
+    font-size: 0.95rem;
+    border-radius: 8px;
+  }}
+  .copy-hint strong {{
+    color: #e63946;
+  }}
+  kbd {{
+    background: #edf2f7;
+    border: 1px solid #cbd5e0;
+    border-radius: 4px;
+    padding: 0.15rem 0.4rem;
+    font-family: monospace;
+    font-size: 0.85em;
+    color: #2d3748;
   }}
   {pygments_css}
 </style>
@@ -111,8 +271,10 @@ def build_html(query: str, papers: List[dict]) -> str:
 <a id="top"></a>
 <div class="container">
 
-  <h1>Google Scholar results for: {html.escape(query)}</h1>
-  <p>Total filtered papers: {len(papers)}</p>
+  <h1>📚 Google Scholar: {html.escape(query)}</h1>
+  <div class="summary">
+    <strong>{len(papers)}</strong> papers found
+  </div>
 
   <div class="view-toggle">
     <strong>View:</strong>
@@ -125,14 +287,14 @@ def build_html(query: str, papers: List[dict]) -> str:
   </div>
 
   <div id="llm-view">
-    <section>
-      <h2>🤖 LLM View – Copiable Results</h2>
+    <div class="llm-section">
+      <h2>🤖 LLM View – Ready to Copy</h2>
       <p>Copy the text below and paste it into ChatGPT/Claude/etc:</p>
       <textarea id="llm-text" readonly>{html.escape(llm_text)}</textarea>
       <div class="copy-hint">
-        💡 Tip: Click in the text area and press Ctrl+A (Cmd+A) then Ctrl+C (Cmd+C) to copy.
+        💡 <strong>Tip:</strong> Click in the text area, press <kbd>Ctrl+A</kbd> (or <kbd>Cmd+A</kbd> on Mac), then <kbd>Ctrl+C</kbd> (or <kbd>Cmd+C</kbd>) to copy everything.
       </div>
-    </section>
+    </div>
   </div>
 
 </div>
@@ -184,7 +346,7 @@ def main() -> int:
     ap.add_argument("--no-open", action="store_true", help="Don't open HTML in browser after generation")
     args = ap.parse_args()
 
-        # Special case: single mode → only scrape top 10 results
+    # Special case: single mode → only scrape top 10 results
     if args.mode == "single":
         args.pool_size = 10
         args.filter_top_k = 1
@@ -214,4 +376,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-

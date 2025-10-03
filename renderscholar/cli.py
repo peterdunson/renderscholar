@@ -71,7 +71,7 @@ def build_html(query: str, papers: List[dict]) -> str:
     margin: 0;
     padding: 0;
     line-height: 1.6;
-    background: linear-gradient(135deg, #e63946 0%, #f4a261 100%);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
   }}
   .container {{ 
@@ -86,7 +86,7 @@ def build_html(query: str, papers: List[dict]) -> str:
     margin-bottom: 0.5rem; 
     color: #2d3748;
     font-size: 2.5rem;
-    background: linear-gradient(135deg, #e63946 0%, #f4a261 100%);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -134,7 +134,7 @@ def build_html(query: str, papers: List[dict]) -> str:
     color: #718096;
   }}
   .citations {{
-    color: #e63946;
+    color: #667eea;
     font-weight: 600;
   }}
   .snippet {{
@@ -145,7 +145,7 @@ def build_html(query: str, papers: List[dict]) -> str:
     color: #2d3748;
     line-height: 1.7;
     margin-bottom: 1rem;
-    border-left: 4px solid #e63946;
+    border-left: 4px solid #667eea;
   }}
   .links {{
     display: flex;
@@ -154,9 +154,9 @@ def build_html(query: str, papers: List[dict]) -> str:
   }}
   .btn {{
     padding: 0.6rem 1.25rem;
-    border: 2px solid #e63946;
+    border: 2px solid #667eea;
     background: white;
-    color: #e63946;
+    color: #667eea;
     text-decoration: none;
     border-radius: 8px;
     font-weight: 600;
@@ -165,19 +165,19 @@ def build_html(query: str, papers: List[dict]) -> str:
     display: inline-block;
   }}
   .btn:hover {{
-    background: #e63946;
+    background: #667eea;
     color: white;
     transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(230, 57, 70, 0.3);
+    box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
   }}
   .btn-primary {{
-    background: linear-gradient(135deg, #e63946 0%, #f4a261 100%);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border: none;
   }}
   .btn-primary:hover {{
-    background: linear-gradient(135deg, #f4a261 0%, #e63946 100%);
-    box-shadow: 0 4px 12px rgba(230, 57, 70, 0.4);
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
   }}
   .view-toggle {{
     margin: 2rem 0;
@@ -203,15 +203,15 @@ def build_html(query: str, papers: List[dict]) -> str:
     color: #4a5568;
   }}
   .toggle-btn.active {{
-    background: linear-gradient(135deg, #e63946 0%, #f4a261 100%);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border-color: transparent;
-    box-shadow: 0 4px 10px rgba(230, 57, 70, 0.3);
+    box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
   }}
   .toggle-btn:hover:not(.active) {{
     background: #f7fafc;
-    border-color: #e63946;
-    color: #e63946;
+    border-color: #667eea;
+    color: #667eea;
   }}
   #llm-view {{ display: none; }}
   #llm-text {{
@@ -246,14 +246,14 @@ def build_html(query: str, papers: List[dict]) -> str:
   .copy-hint {{
     margin-top: 1rem;
     padding: 1rem 1.25rem;
-    background: linear-gradient(135deg, rgba(230, 57, 70, 0.1) 0%, rgba(244, 162, 97, 0.1) 100%);
-    border-left: 4px solid #e63946;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+    border-left: 4px solid #667eea;
     color: #2d3748;
     font-size: 0.95rem;
     border-radius: 8px;
   }}
   .copy-hint strong {{
-    color: #e63946;
+    color: #667eea;
   }}
   kbd {{
     background: #edf2f7;

@@ -17,3 +17,7 @@ pymc>=5.16.1
 pydantic>=2.9.2
 pygments>=2.19.0
 markdown>=3.8.2
+
+
+sentence-transformers>=2.2.2
+

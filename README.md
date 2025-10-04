@@ -1,5 +1,7 @@
 # 📚 renderscholar
 
+![renderscholar demo](readme.png)
+
 **renderscholar** lets you search Google Scholar from the terminal, scrape real papers, and render them into a static HTML page.  
 No more hallucinated citations from LLMs — everything comes straight from Scholar.
 
@@ -8,17 +10,17 @@ The HTML includes two views:
 - 👤 **Human View** — nicely formatted papers (title, authors, year, citations, link, snippet).  
 - 🤖 **LLM View** — plain-text block you can copy-paste into ChatGPT/Claude/etc.  
 
-Inspired by [Andrej Karpathy’s `rendergit`](https://github.com/karpathy/rendergit).
+Inspired by [Andrej Karpathy's `rendergit`](https://github.com/karpathy/rendergit).
 
 ---
 
 ## 🔧 Installation
 
-You’ll need **Python 3.10+**. Then install directly from GitHub:
+You'll need **Python 3.10+**. Then install directly from GitHub:
 
 ```bash
 pip install git+https://github.com/peterdunson/renderscholar.git
-````
+```
 
 ### First-time setup
 
@@ -52,7 +54,7 @@ Options:
 * `--pool-size N` → number of raw results to scrape (default: 100)
 * `--filter-top-k N` → number of top papers to keep after ranking (default: 20)
 * `--mode balanced|recent|famous|influential|hot|semantic` → ranking style (default: balanced)
-* `--no-open` → don’t auto-open in browser
+* `--no-open` → don't auto-open in browser
 * `-o out.html` → write to a specific file instead of a temp file
 
 ### 📊 Modes
@@ -77,17 +79,17 @@ This will:
 
 1. Open Scholar in a Chromium browser (so you can solve captcha if needed).
 2. Scrape ~80 results.
-3. Rank and filter to the top 15 (favoring “hot” papers).
+3. Rank and filter to the top 15 (favoring "hot" papers).
 4. Render an HTML file and open it in your browser.
 
 ---
 
 ## 📂 Output
 
-* 👤 **Human View**
+* 👤 **Human View**  
   Nicely formatted papers with titles, authors, years, citations, snippets, and links.
 
-* 🤖 **LLM View**
+* 🤖 **LLM View**  
   Copiable plain text, ready for ChatGPT/Claude/etc. — no risk of hallucinated papers.
 
 ---
